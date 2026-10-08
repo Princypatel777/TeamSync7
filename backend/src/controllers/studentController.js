@@ -5,6 +5,10 @@ import ProjectGroup from '../models/ProjectGroup.js';
 import Project from '../models/Project.js';
 import Task from '../models/Task.js';
 import Notification from '../models/Notification.js';
+import StudentMark from '../models/StudentMark.js';
+import ReviewMark from '../models/ReviewMark.js';
+import ReviewSchedule from '../models/ReviewSchedule.js';
+import Review from '../models/Review.js';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
@@ -25,7 +29,6 @@ export const getStudentDashboard = async (req, res, next) => {
     const membership = await GroupMember.findOne({ userId, status: 'ACCEPTED' });
 
     if (!membership) {
-      // New student without a group
       const unreadNotifications = await Notification.countDocuments({ recipientId: userId, isRead: false });
 
       return res.status(200).json({
@@ -33,56 +36,132 @@ export const getStudentDashboard = async (req, res, next) => {
         hasGroup: false,
         group: null,
         project: null,
-        tasks: { pending: 0, inProgress: 0, dueSoon: 0 },
+        mentor: null,
+        tasks: { pending: 0, inProgress: 0, completed: 0, dueSoon: 0 },
         notificationsCount: unreadNotifications,
         progress: null,
         deadlines: [],
+        latestEvaluation: null,
         activity: [
-          { id: 1, text: 'Welcome to TeamSync! Form or join a group in My Group tab to get started.', type: 'comment', time: 'Just now' }
+          { id: 1, text: 'Welcome to TeamSync! Form or join a group in My Group to begin.', type: 'comment', time: 'Just now' }
         ]
       });
     }
 
-    // Fetch Group
-    const group = await ProjectGroup.findById(membership.groupId).populate('leaderId', 'name enrollmentNumber');
+    // Fetch Group with leader, guide, department, cycle
+    const group = await ProjectGroup.findById(membership.groupId)
+      .populate('leaderId', 'name enrollmentNumber email')
+      .populate('guideId', 'name email designation')
+      .populate('coGuideId', 'name email designation')
+      .populate('departmentId', 'name code')
+      .populate('sgpCycleId', 'name');
+
     const membersCount = await GroupMember.countDocuments({ groupId: group._id, status: 'ACCEPTED' });
 
     // Fetch Active Project
-    const project = await Project.findOne({ groupId: group._id });
+    const project = await Project.findOne({ groupId: group._id }).populate('facultyGuideId', 'name email');
 
-    let tasksSummary = { pending: 0, inProgress: 0, dueSoon: 0 };
-    let projectProgress = { overall: 0, features: 0, tasks: 0, milestones: 0 };
+    const mentor = group.guideId || project?.facultyGuideId || group.coGuideId || null;
+
+    let tasksSummary = { pending: 0, inProgress: 0, completed: 0, dueSoon: 0 };
+    let groupTasksSummary = { total: 0, completed: 0, pending: 0 };
+    let projectProgress = { overall: 0, completedTasks: 0, totalTasks: 0 };
     let deadlines = [];
 
     if (project) {
-      const myTasks = await Task.find({ projectId: project._id, assigneeId: userId });
-      const pending = myTasks.filter(t => t.status === 'TODO').length;
-      const inProgress = myTasks.filter(t => t.status === 'IN_PROGRESS' || t.status === 'IN_REVIEW').length;
-      const done = myTasks.filter(t => t.status === 'DONE').length;
+      const allProjectTasks = await Task.find({ projectId: project._id });
+      const doneGroupTasks = allProjectTasks.filter(t => t.status === 'DONE').length;
+      const totalGroupTasks = allProjectTasks.length;
+      const progressPercent = totalGroupTasks > 0 ? Math.round((doneGroupTasks / totalGroupTasks) * 100) : 0;
 
-      const totalTasks = myTasks.length;
-      const taskProgressPercentage = totalTasks > 0 ? Math.round((done / totalTasks) * 100) : 0;
-
-      tasksSummary = {
-        pending,
-        inProgress,
-        dueSoon: myTasks.filter(t => t.dueDate && new Date(t.dueDate) <= new Date(Date.now() + 86400000 * 2)).length
+      groupTasksSummary = {
+        total: totalGroupTasks,
+        completed: doneGroupTasks,
+        pending: totalGroupTasks - doneGroupTasks,
       };
 
       projectProgress = {
-        overall: taskProgressPercentage,
-        features: 0,
-        tasks: taskProgressPercentage,
-        milestones: 0
+        overall: progressPercent,
+        completedTasks: doneGroupTasks,
+        totalTasks: totalGroupTasks,
       };
 
-      deadlines = myTasks.slice(0, 3).map((t, idx) => ({
-        id: t._id || idx,
-        type: 'TASK',
-        title: t.title,
-        due: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'No date',
-        urgency: t.priority === 'HIGH' ? 'high' : 'medium'
-      }));
+      const myTasks = allProjectTasks.filter(t => String(t.assigneeId) === String(userId));
+      const pendingMy = myTasks.filter(t => t.status === 'TO_DO' || t.status === 'TODO').length;
+      const inProgressMy = myTasks.filter(t => t.status === 'IN_PROGRESS' || t.status === 'IN_REVIEW').length;
+      const doneMy = myTasks.filter(t => t.status === 'DONE').length;
+
+      tasksSummary = {
+        pending: pendingMy,
+        inProgress: inProgressMy,
+        completed: doneMy,
+        dueSoon: myTasks.filter(t => t.dueDate && new Date(t.dueDate) <= new Date(Date.now() + 86400000 * 3) && t.status !== 'DONE').length,
+      };
+
+      // Deadlines from upcoming tasks
+      const upcomingTasks = myTasks
+        .filter(t => t.status !== 'DONE' && t.dueDate)
+        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .slice(0, 3)
+        .map((t) => ({
+          id: t._id,
+          type: 'TASK',
+          title: t.title,
+          due: new Date(t.dueDate).toLocaleDateString(),
+          urgency: t.priority === 'HIGH' ? 'high' : 'medium',
+        }));
+
+      deadlines.push(...upcomingTasks);
+    }
+
+    // Deadlines from scheduled reviews
+    const upcomingReviews = await ReviewSchedule.find({
+      scheduledDate: { $gte: new Date(Date.now() - 86400000) }
+    }).sort({ scheduledDate: 1 }).limit(2);
+
+    upcomingReviews.forEach((r) => {
+      deadlines.push({
+        id: r._id,
+        type: 'REVIEW',
+        title: r.reviewName || 'SGP Review',
+        due: new Date(r.scheduledDate).toLocaleDateString(),
+        urgency: 'high',
+      });
+    });
+
+    // Latest Evaluation / Marks
+    let latestEvaluation = null;
+    const latestStudentMark = await StudentMark.findOne({ studentId: userId })
+      .sort({ createdAt: -1 })
+      .populate('evaluatorId', 'name designation email');
+
+    if (latestStudentMark) {
+      latestEvaluation = {
+        stage: latestStudentMark.reviewStage,
+        totalMarks: latestStudentMark.totalMarksObtained,
+        grade: latestStudentMark.grade,
+        feedback: latestStudentMark.feedback,
+        evaluatorName: latestStudentMark.evaluatorId?.name || 'Faculty Guide',
+        criteriaScores: latestStudentMark.criteriaScores || [],
+        date: latestStudentMark.updatedAt || latestStudentMark.createdAt,
+      };
+    } else {
+      const latestReviewMark = await ReviewMark.findOne({ studentId: userId, status: 'SUBMITTED' })
+        .sort({ createdAt: -1 })
+        .populate({ path: 'reviewId', match: { marksVisibility: 'VISIBLE' } })
+        .populate('facultyId', 'name');
+
+      if (latestReviewMark && latestReviewMark.reviewId) {
+        latestEvaluation = {
+          stage: latestReviewMark.reviewId.title,
+          totalMarks: latestReviewMark.marks,
+          maxMarks: latestReviewMark.reviewId.maxMarks,
+          grade: latestReviewMark.marks >= 18 ? 'A+' : latestReviewMark.marks >= 15 ? 'A' : 'B',
+          feedback: latestReviewMark.feedback,
+          evaluatorName: latestReviewMark.facultyId?.name || 'Faculty Guide',
+          date: latestReviewMark.updatedAt,
+        };
+      }
     }
 
     const unreadNotifications = await Notification.countDocuments({ recipientId: userId, isRead: false });
@@ -95,20 +174,33 @@ export const getStudentDashboard = async (req, res, next) => {
         name: group.name,
         code: group.code,
         status: group.status,
-        membersCount
+        membersCount,
+        leader: group.leaderId,
+        department: group.departmentId?.name || 'Information Technology',
+        sgpCycle: group.sgpCycleId?.name || 'SGP-V',
       },
+      mentor: mentor ? {
+        _id: mentor._id,
+        name: mentor.name,
+        email: mentor.email,
+        designation: mentor.designation || 'Faculty Guide',
+      } : null,
       project: project ? {
         _id: project._id,
         title: project.title,
-        status: project.status
+        status: project.status,
+        projectKey: project.projectKey,
+        description: project.description,
       } : null,
       tasks: tasksSummary,
+      groupTasks: groupTasksSummary,
       notificationsCount: unreadNotifications,
       progress: projectProgress,
       deadlines,
+      latestEvaluation,
       activity: [
-        { id: 1, text: `Active in group ${group.name || group.code}`, type: 'feature', time: 'Recently' }
-      ]
+        { id: 1, text: `Active member in group ${group.name || group.code}`, type: 'feature', time: 'Recently' },
+      ],
     });
   } catch (error) {
     next(error);

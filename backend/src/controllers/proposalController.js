@@ -572,11 +572,14 @@ export const getAssignedProposals = async (req, res, next) => {
     const query = {};
 
     if (user.role === 'FACULTY') {
-      // Allow faculty to see proposals assigned to them, OR unassigned proposals (so they can review/adopt them)
+      const assignedGroups = await ProjectGroup.find({
+        $or: [{ guideId: user._id }, { coGuideId: user._id }],
+      }).select('_id');
+      const assignedGroupIds = assignedGroups.map((g) => g._id);
+
       query.$or = [
         { facultyGuideId: user._id },
-        { facultyGuideId: null, status: 'SUBMITTED' },
-        { facultyGuideId: null, status: 'RESUBMITTED' }
+        { groupId: { $in: assignedGroupIds } },
       ];
     }
 

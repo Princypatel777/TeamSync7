@@ -24,6 +24,10 @@ import {
   updateBugStatus,
   deleteBug,
   getTraceabilityChain,
+  getEpics,
+  createEpic,
+  getStories,
+  createStory,
 } from '../controllers/agileController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -63,6 +67,12 @@ router.post('/bugs', authorize('STUDENT', 'ADMIN'), createBug);
 router.put('/bugs/:id', authorize('STUDENT', 'ADMIN', 'FACULTY'), updateBug);
 router.put('/bugs/:id/status', authorize('STUDENT', 'ADMIN', 'FACULTY'), updateBugStatus);
 router.delete('/bugs/:id', authorize('STUDENT', 'ADMIN'), deleteBug);
+
+// Epics & User Stories
+router.get('/epics', getEpics);
+router.post('/epics', authorize('STUDENT', 'ADMIN'), createEpic);
+router.get('/stories', getStories);
+router.post('/stories', authorize('STUDENT', 'ADMIN'), createStory);
 
 // Traceability Matrix
 router.get('/traceability', getTraceabilityChain);

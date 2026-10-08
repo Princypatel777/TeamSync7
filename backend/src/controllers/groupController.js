@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import ProjectGroup from '../models/ProjectGroup.js';
 import GroupMember from '../models/GroupMember.js';
+import Project from '../models/Project.js';
 import User from '../models/User.js';
 import StudentProfile from '../models/StudentProfile.js';
 import SystemConfig from '../models/SystemConfig.js';
@@ -203,7 +204,16 @@ export const getMyGroup = async (req, res, next) => {
     const membership = await GroupMember.findOne({
       userId: user._id,
       status: 'ACCEPTED',
-    }).populate('groupId');
+    }).populate({
+      path: 'groupId',
+      populate: [
+        { path: 'leaderId', select: 'name email enrollmentNumber' },
+        { path: 'guideId', select: 'name email designation' },
+        { path: 'coGuideId', select: 'name email designation' },
+        { path: 'sgpCycleId', select: 'name' },
+        { path: 'departmentId', select: 'name code' },
+      ],
+    });
 
     if (!membership || !membership.groupId) {
       // Check if student has pending invites
@@ -258,10 +268,16 @@ export const getMyGroup = async (req, res, next) => {
       status: 'INVITED',
     }).populate('userId', 'name enrollmentNumber email');
 
+    // Get active project if any
+    const activeProject = await Project.findOne({ groupId: group._id })
+      .populate('facultyGuideId', 'name email designation')
+      .lean();
+
     const maxGroupSize = await getMaxGroupSize();
     const groupObj = group.toJSON ? group.toJSON() : { ...group };
     groupObj.maxMembers = maxGroupSize;
     groupObj.minMembers = 2;
+    groupObj.activeProject = activeProject || null;
 
     res.status(200).json({
       success: true,

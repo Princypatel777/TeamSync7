@@ -542,9 +542,23 @@ export const deleteFile = async (req, res, next) => {
     const { id } = req.params;
     const user = req.user;
     const projectId = await resolveAndVerifyProjectId(req);
+    if (!projectId) return res.status(403).json({ success: false, message: 'Unauthorized project access.' });
 
-    const fileDoc = await ProjectFile.findOneAndDelete({ _id: id, projectId });
+    const fileDoc = await ProjectFile.findOne({ _id: id, projectId });
     if (!fileDoc) return res.status(404).json({ success: false, message: 'File not found or unauthorized.' });
+
+    // Deletion Rule: Uploader can delete their own file; Faculty/Admin/Coordinator can delete any group file
+    const isUploader = String(fileDoc.uploaderId) === String(user._id);
+    const isFacultyOrAdmin = ['FACULTY', 'COORDINATOR', 'ADMIN'].includes(user.role);
+
+    if (!isUploader && !isFacultyOrAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the student who uploaded this file or your faculty guide can delete it.'
+      });
+    }
+
+    await ProjectFile.findByIdAndDelete(id);
 
     // Clean up physical file on disk
     if (fileDoc.fileUrl && fileDoc.fileUrl.startsWith('/uploads/')) {

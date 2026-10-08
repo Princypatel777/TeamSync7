@@ -24,6 +24,7 @@ const releaseSchema = new mongoose.Schema(
     releaseDate: {
       type: Date,
       required: true,
+      default: Date.now,
     },
     milestoneId: {
       type: mongoose.Schema.Types.ObjectId,

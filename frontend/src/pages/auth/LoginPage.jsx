@@ -144,12 +144,65 @@ export const LoginPage = () => {
               )}
             </button>
           </form>
+
+          {/* Quick Demo Credentials */}
+          <div className="mt-6 pt-5 border-t border-slate-100">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 text-center">
+              Quick Demo Login:
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginId('24IT001');
+                  setPassword('student123');
+                }}
+                className="p-2 text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
+              >
+                <div className="font-bold text-slate-800">Student</div>
+                <div className="text-[10px] text-slate-500 font-mono">24IT001</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginId('faculty@teamsync.edu');
+                  setPassword('faculty123');
+                }}
+                className="p-2 text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
+              >
+                <div className="font-bold text-slate-800">Faculty Guide</div>
+                <div className="text-[10px] text-slate-500 font-mono">faculty@teamsync.edu</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginId('coordinator@teamsync.edu');
+                  setPassword('coord123');
+                }}
+                className="p-2 text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
+              >
+                <div className="font-bold text-slate-800">Coordinator</div>
+                <div className="text-[10px] text-slate-500 font-mono">coordinator@teamsync.edu</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginId('admin@teamsync.edu');
+                  setPassword('admin123');
+                }}
+                className="p-2 text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
+              >
+                <div className="font-bold text-slate-800">System Admin</div>
+                <div className="text-[10px] text-slate-500 font-mono">admin@teamsync.edu</div>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Card Footer */}
         <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
           <p className="text-[11px] text-slate-500">
-            Account provisioning is restricted to Institutional Admins.
+            Institutional SGP project management system. All actions audited.
           </p>
         </div>
       </div>
