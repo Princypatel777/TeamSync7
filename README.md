@@ -148,9 +148,9 @@ npm run dev
 
 ---
 
-## 🔑 Demo Login Credentials
+## 🔑 Seeded Test Accounts
 
-The application includes one-click demo pills on the Login screen (`/login`) for convenience:
+The following accounts are initialized when running `npm run seed`:
 
 | Role | Login Identifier (College ID / Email) | Password | Default Redirect | Details |
 |---|---|---|---|---|

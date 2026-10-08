@@ -66,7 +66,7 @@ export const LoginPage = () => {
             Sign In to Your Account
           </h2>
           <p className="text-xs text-slate-500 text-center mb-6">
-            Students: Log in with Enrollment Number & Password
+            Enter your College ID or Email address and Password
           </p>
 
           {/* Error Banner */}
@@ -144,86 +144,6 @@ export const LoginPage = () => {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Credentials */}
-          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
-                Staff Demo Accounts:
-              </p>
-              <div className="grid grid-cols-3 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginId('faculty@teamsync.edu');
-                    setPassword('faculty123');
-                  }}
-                  className="p-2 text-center bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
-                >
-                  <div className="font-bold text-slate-800 text-[11px]">Faculty Guide</div>
-                  <div className="text-[9px] text-slate-500 font-mono truncate">faculty@teamsync.edu</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginId('coordinator@teamsync.edu');
-                    setPassword('coord123');
-                  }}
-                  className="p-2 text-center bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
-                >
-                  <div className="font-bold text-slate-800 text-[11px]">Coordinator</div>
-                  <div className="text-[9px] text-slate-500 font-mono truncate">coordinator@teamsync.edu</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginId('admin@teamsync.edu');
-                    setPassword('admin123');
-                  }}
-                  className="p-2 text-center bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition"
-                >
-                  <div className="font-bold text-slate-800 text-[11px]">System Admin</div>
-                  <div className="text-[9px] text-slate-500 font-mono truncate">admin@teamsync.edu</div>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Student Demo Accounts (Pass: student123):
-                </span>
-                <span className="text-[10px] text-blue-600 font-semibold font-mono">7 Enrolled</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs">
-                {[
-                  { id: '24IT001', name: 'Rahul Sharma', role: 'Group 1 Lead' },
-                  { id: '24IT002', name: 'Priya Verma', role: 'Group 1 Member' },
-                  { id: '24IT003', name: 'Aarav Patel', role: 'Group 2 Lead' },
-                  { id: '24IT004', name: 'Diya Shah', role: 'Group 2 Member' },
-                  { id: '24IT005', name: 'Rohan Mehta', role: 'Group 2 Member' },
-                  { id: '24IT006', name: 'Ananya Joshi', role: 'Unassigned' },
-                  { id: '24IT007', name: 'Harsh Desai', role: 'Unassigned' },
-                ].map((student) => (
-                  <button
-                    key={student.id}
-                    type="button"
-                    onClick={() => {
-                      setLoginId(student.id);
-                      setPassword('student123');
-                    }}
-                    className="p-1.5 text-left bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-lg transition"
-                  >
-                    <div className="font-bold text-slate-800 text-[11px] truncate">{student.name}</div>
-                    <div className="text-[9px] text-indigo-600 font-mono font-semibold flex justify-between">
-                      <span>{student.id}</span>
-                      <span className="text-slate-400 font-normal truncate max-w-[50px]">{student.role.split(' ')[0]}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Card Footer */}
