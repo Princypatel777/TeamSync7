@@ -152,12 +152,18 @@ npm run dev
 
 The application includes one-click demo pills on the Login screen (`/login`) for convenience:
 
-| Role | Login Identifier (College ID / Email) | Password | Default Redirect |
-|---|---|---|---|
-| **Student** | `24IT001` | `student123` | `/student/dashboard` |
-| **Faculty Guide** | `faculty@teamsync.edu` | `faculty123` | `/faculty/dashboard` |
-| **Coordinator** | `coordinator@teamsync.edu` | `coord123` | `/coordinator/dashboard` |
-| **System Admin** | `admin@teamsync.edu` | `admin123` | `/admin/dashboard` |
+| Role | Login Identifier (College ID / Email) | Password | Default Redirect | Details |
+|---|---|---|---|---|
+| **Student 1** | `24IT001` | `student123` | `/student/dashboard` | Rahul Sharma (Team Alpha Lead) |
+| **Student 2** | `24IT002` | `student123` | `/student/dashboard` | Priya Verma (Team Alpha Member) |
+| **Student 3** | `24IT003` | `student123` | `/student/dashboard` | Aarav Patel (NextGen IoT Lead) |
+| **Student 4** | `24IT004` | `student123` | `/student/dashboard` | Diya Shah (NextGen IoT Member) |
+| **Student 5** | `24IT005` | `student123` | `/student/dashboard` | Rohan Mehta (NextGen IoT Member) |
+| **Student 6** | `24IT006` | `student123` | `/student/dashboard` | Ananya Joshi (Available Student) |
+| **Student 7** | `24IT007` | `student123` | `/student/dashboard` | Harsh Desai (Available Student) |
+| **Faculty Guide** | `faculty@teamsync.edu` | `faculty123` | `/faculty/dashboard` | Dr. Ananya Sharma |
+| **Coordinator** | `coordinator@teamsync.edu` | `coord123` | `/coordinator/dashboard` | Prof. Hitesh Patel |
+| **System Admin** | `admin@teamsync.edu` | `admin123` | `/admin/dashboard` | System Administrator |
 
 ---
 
